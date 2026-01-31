@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPulse | Persistent Ops (No Limit)</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #3b82f6;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Layout */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 3fr 1fr; 
+            grid-template-rows: 1fr minmax(250px, 30vh);
+            gap: 1rem;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* --- Dashboard Area --- */
+        .dashboard {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; overflow: hidden; min-height: 0;
+        }
+        
+        .product-grid-container {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            padding: 1rem; display: flex; flex-direction: column; min-height: 0;
+        }
+        
+        .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem; overflow-y: auto; min-height: 0; padding-right: 5px;
+        }
+
+        .product-card {
+            background: #fff; border: 1px solid var(--border); border-radius: 6px;
+            padding: 1rem; cursor: pointer; text-align: center;
+            transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: var(--secondary); }
+        .product-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;}
+        .product-price { color: var(--text-main); font-weight: 700; margin-top: 8px; font-size: 1.1rem; }
+
+        /* Cart */
+        .cart-panel {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            padding: 1rem; display: flex; flex-direction: column; min-height: 0;
+        }
+        .cart-items { flex: 1; overflow-y: auto; margin: 10px 0; min-height: 0; background: #f1f5f9; border-radius: 4px; padding: 5px;}
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; background: white; margin-bottom: 5px; border-radius: 4px;
+            border: 1px solid var(--border); font-size: 0.85rem;
+        }
+
+        /* --- Right Column (Split) --- */
+        .right-column {
+            grid-column: 2 / 3;
+            grid-row: 1 / 3;
+            display: grid;
+            grid-template-rows: 60% 40%; 
+            gap: 1rem;
+            overflow: hidden;
+        }
+
+        /* Chat */
+        .agent-panel {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+        }
+        .chat-area {
+            flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8fafc;
+        }
+        .message {
+            max-width: 85%; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.4;
+        }
+        .message.agent { background: white; border: 1px solid var(--border); border-left: 3px solid var(--secondary); align-self: flex-start; }
+        .message.system { background: #e2e8f0; align-self: center; font-size: 0.75rem; width: 100%; text-align: center;}
+
+        /* Visualizer (Plain English) */
+        .visualizer-panel {
+            background: #f0fdf4; 
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+        }
+        .viz-header {
+            background: var(--accent); color: white; padding: 8px 12px; font-size: 0.85rem; font-weight: 600;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .viz-content {
+            flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 0;
+        }
+        .viz-card {
+            background: white; border-left: 3px solid var(--accent); padding: 10px; border-radius: 4px;
+            font-size: 0.8rem; line-height: 1.5; color: #064e3b; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .viz-card strong { color: var(--primary); display: block; margin-bottom: 2px; }
+
+        /* --- Bottom Logs (Left) --- */
+        .system-monitor {
+            grid-row: 2 / 3;
+            grid-column: 1 / 2;
+            background: #0f172a; color: #a5b4fc; font-family: 'Fira Code', monospace;
+            padding: 1rem; border-radius: 6px; display: grid;
+            grid-template-columns: 1fr 1fr; gap: 1rem; overflow: hidden;
+        }
+        .log-col { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .log-content { flex: 1; overflow-y: auto; font-size: 0.75rem; }
+        .log-entry { margin-bottom: 3px; border-bottom: 1px solid #1e293b; padding-bottom: 2px; display: flex; gap: 8px;}
+        
+        /* Order contents specific styling */
+        .log-item-list { 
+            color: #facc15; 
+            font-size: 0.7rem;
+            padding-left: 20px; 
+            margin-top: -2px;
+            margin-bottom: 5px;
+        }
+
+        /* The Ping Animation for Main Memory */
+        @keyframes ping-memory {
+            0% { background-color: #10b981; box-shadow: 0 0 10px #10b981; }
+            100% { background-color: transparent; box-shadow: none; }
+        }
+        .memory-ping {
+            animation: ping-memory 0.5s ease-out;
+            border-radius: 4px;
+        }
+
+        /* Buttons */
+        .btn { border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; margin-top: 5px;}
+        .btn-checkout { width: 100%; background: var(--primary); color: white; padding: 10px; }
+        .btn-checkout:hover { background: var(--secondary); }
+        .btn-cancel { background: var(--danger); color: white; margin-top: 10px;}
+
+        /* Overlay */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .loader-box { background: white; padding: 2rem; border-radius: 8px; text-align: center; min-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: auto; }
+        .badge-auto { background: var(--accent); color: white; }
+        .badge-processing { background: var(--warning); color: white; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1.5rem;">⚡</span>
+        <div>
+            <h2 style="font-size:1rem; margin:0;">PayPulse Enterprise</h2>
+            <span style="font-size:0.75rem; opacity:0.7; color:var(--accent)">| Persistent Ops</span>
+        </div>
+    </div>
+    <div style="font-size: 0.8rem;">
+        Backend: <span style="color:var(--secondary)">Localhost:3000</span>
+    </div>
+</header>
+
+<main>
+    <!-- Dashboard -->
+    <section class="dashboard">
+        <div class="product-grid-container">
+            <div style="font-weight:600; margin-bottom:10px; display:flex; justify-content:space-between;">
+                <span>Available Services</span>
+                <span style="font-size:0.75rem; color:var(--text-muted)">Live Market Data</span>
+            </div>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+        
+        <div class="cart-panel">
+            <div style="font-weight:600; margin-bottom:10px;">Requisition Cart</div>
+            <div class="cart-items" id="cartItems"></div>
+            <div style="margin-top:auto; border-top:1px solid var(--border); padding-top:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>Total Exposure:</span> <span id="cartTotal" style="font-weight:bold;">₹0</span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button id="optimizeBtn" class="btn" style="flex:1; background:var(--secondary); color:white;">Optimize</button>
+                    <button id="checkoutBtn" class="btn btn-checkout" style="flex:2;">Settle (Infinite Retry)</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+        <!-- Top: Chat -->
+        <aside class="agent-panel">
+            <div style="background:var(--primary); color:white; padding:10px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+                <span>🤖 Financial Ops Agent</span>
+                <span id="statusBadge" class="badge badge-auto">ONLINE</span>
+            </div>
+            <div class="chat-area" id="chatArea">
+                <div class="message system">Connected to Payment Rails & Compliance DB</div>
+                <div class="message agent">I will retry failed transactions indefinitely until success or manual cancellation.</div>
+            </div>
+        </aside>
+
+        <!-- Bottom: AI Process Visualizer -->
+        <aside class="visualizer-panel">
+            <div class="viz-header">
+                <span>🧠 AI Activity & Decisions</span>
+                <span style="font-size:0.7rem; opacity:0.8;">READABLE LOGS</span>
+            </div>
+            <div class="viz-content" id="visualizerLog">
+                <div class="viz-card">
+                    <strong>Initialization:</strong>
+                    AI is now online. It will persist through gateway failures without limit until success is achieved.
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- BOTTOM LOGS (Left) -->
+    <section class="system-monitor">
+        <div class="log-col">
+            <div style="color:var(--text-muted); border-bottom:1px solid #334155; padding-bottom:5px; font-size:0.7rem; text-transform:uppercase;">Network Traffic</div>
+            <div class="log-content" id="networkLog"></div>
+        </div>
+        <div class="log-col" id="mainMemoryLogContainer">
+            <div style="color:var(--text-muted); border-bottom:1px solid #334155; padding-bottom:5px; font-size:0.7rem; text-transform:uppercase;">Main System Memory</div>
+            <div class="log-content" id="systemMemoryLog"></div>
+        </div>
+    </section>
+</main>
+
+<div class="overlay" id="loadingOverlay">
+    <div class="loader-box">
+        <div id="loadingText" style="font-weight:bold; margin-bottom:5px;">Initializing...</div>
+        <div style="height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden; margin-bottom:20px;">
+            <div id="progressBar" style="height:100%; width:0%; background:var(--secondary); transition:width 0.2s;"></div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;" id="attemptText">Attempt 1</div>
+        <button id="cancelRetryBtn" class="btn btn-cancel">Stop & Cancel</button>
+    </div>
+</div>
+
+<script>
+const API_URL = 'http://localhost:3000/api';
+
+// REMOVED: const MAX_RETRIES = 3; 
+// AI will now retry indefinitely until success.
+
+const FINTECH_CATALOG = [
+    { id: 1, name: "Payment Gateway API", price: 5999, type: "Infrastructure", risk: "Low" },
+    { id: 2, name: "Global FX Transfer", price: 2500, type: "Remittance", risk: "High" },
+    { id: 3, name: "AML Screening Engine", price: 8500, type: "Compliance", risk: "Low" },
+    { id: 4, name: "Corporate Virtual Cards", price: 3200, type: "Issuing", risk: "Medium" },
+    { id: 5, name: "Treasury Yield API", price: 1200, type: "Wealth", risk: "High" },
+    { id: 6, name: "Identity Verification", price: 1500, type: "Identity", risk: "Low" },
+    { id: 7, name: "Fraud Detection Shield", price: 6800, type: "Security", risk: "Low" },
+    { id: 8, name: "Merchant BNPL Module", price: 4100, type: "Lending", risk: "Medium" }
+];
+
+// --- 1. Logger Helper ---
+const Logger = {
+    network: document.getElementById('networkLog'),
+    memory: document.getElementById('systemMemoryLog'),
+    memoryContainer: document.getElementById('mainMemoryLogContainer'),
+    
+    logNet: function(msg, type='info') {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `<span style="color:#64748b">[${new Date().toLocaleTimeString()}]</span> <span style="color:${type==='err'?'#ef4444':type==='success'?'#10b981':'#e2e8f0'}">${msg}</span>`;
+        this.network.prepend(div);
+    },
+    
+    logMemory: function(msg, type='info') {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `<span style="color:#64748b">[${new Date().toLocaleTimeString()}]</span> <span style="color:${type==='mod'?'#facc15':type==='success'?'#10b981':'#94a3b8'}">${msg}</span>`;
+        this.memory.prepend(div);
+    },
+
+    pingMemory: function(msg) {
+        this.logMemory(msg, 'mod');
+        this.memoryContainer.classList.add('memory-ping');
+        setTimeout(() => this.memoryContainer.classList.remove('memory-ping'), 500);
+    },
+
+    logOrderContents: function(items) {
+        const itemNames = items.map(i => i.name).join(", ");
+        const div = document.createElement('div');
+        div.className = 'log-entry log-item-list';
+        div.innerHTML = `<span style="color:#64748b">[${new Date().toLocaleTimeString()}]</span> > ORDER_CONTENTS: [${itemNames}]`;
+        this.memory.prepend(div);
+    }
+};
+
+// --- 2. Visualizer (Plain English) ---
+const Visualizer = {
+    container: document.getElementById('visualizerLog'),
+    
+    explain: function(title, text) {
+        const div = document.createElement('div');
+        div.className = 'viz-card';
+        div.innerHTML = `<strong>${title}</strong>${text}`;
+        this.container.appendChild(div);
+        this.container.scrollTop = this.container.scrollHeight;
+    }
+};
+
+// --- 3. Agentic AI Controller (INFINITE RETRY) ---
+class AIOps {
+    constructor() {
+        this.chatArea = document.getElementById('chatArea');
+    }
+
+    chat(text, type = 'agent') {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        div.innerHTML = text;
+        this.chatArea.appendChild(div);
+        this.chatArea.scrollTop = this.chatArea.scrollHeight;
+    }
+
+    async runComplianceCheck(items) {
+        this.chat("🛡️ <b>Running AML Check...</b>", 'agent');
+        await new Promise(r => setTimeout(r, 800)); 
+        
+        const highRiskItems = items.filter(i => i.risk === 'High');
+        
+        if (highRiskItems.length > 0) {
+            Visualizer.explain("Risk Assessment", `AI detected ${highRiskItems.length} high-risk items. I am applying extra monitoring protocols to ensure safety.`);
+            this.chat(`⚠️ High Risk flagged. Applied enhanced monitoring.`, 'agent');
+            Logger.logMemory("RISK_LEVEL: HIGH (MONITORING ACTIVE)");
+        } else {
+            Visualizer.explain("Compliance Check", "The AI scanned all items against global sanction lists. No issues found.");
+            this.chat("✅ Compliance Clear.", 'agent');
+            Logger.logMemory("RISK_LEVEL: LOW (APPROVED)");
+        }
+    }
+
+    handleSwap(oldItem, newItem) {
+        Visualizer.explain("Asset Management", `AI detected a swap request. I am selling '${oldItem.name}' (₹${oldItem.price}) and buying '${newItem.name}' (₹${newItem.price}) to fit your goals.`);
+        this.chat(`Swapped **${oldItem.name}** for **${newItem.name}**.`, 'agent');
+        Logger.logMemory(`ASSET_SWAP: ${oldItem.name} -> ${newItem.name}`);
+    }
+
+    trackPurchase(item) {
+        Visualizer.explain("Intent Tracking", "The AI watched you click 'Add to Cart'. I have stored this intention in my temporary memory.");
+    }
+
+    handleOptimization() {
+        Visualizer.explain("Cart Optimization", "The AI analyzed your cart. It is now reorganizing items by price (High to Low) to maximize value visibility.");
+        this.chat("Cart optimized by value and efficiency.", 'agent');
+        Logger.logMemory("CART_OPTIMIZED: REORGANIZED BY AI");
+        app.sortCartByPrice();
+    }
+
+    // --- NEW LOGIC: Infinite Retry Loop ---
+    async persistentRecovery(cartData, attempt = 1) {
+        // 1. Update UI (Attempt Number)
+        document.getElementById('attemptText').innerText = `Attempt ${attempt}`; // Removed " / 3" limit
+        
+        // Visual Progress Bar (Just cycling logic since we don't know how long it will take)
+        const progressWidth = (attempt % 10) * 10 + 10; 
+        document.getElementById('progressBar').style.width = `${progressWidth}%`;
+
+        // 2. Try the API
+        try {
+            Logger.logNet(`POST /checkout (Attempt ${attempt})...`);
+            const response = await fetch(`${API_URL}/checkout`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(cartData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // 3. Failure Detected
+                
+                // If Compliance Error: Stop immediately (Cannot persist past laws)
+                if (data.code === 'AML_FAILED') {
+                    throw new Error(JSON.stringify(data)); 
+                }
+
+                // If Gateway or DB Error: RECURSE (Try again)
+                Logger.logNet(`FAILED: ${data.code} - Retrying...`, 'err');
+                this.chat(`❌ <b>Attempt ${attempt} Failed:</b> ${data.message}. Retrying...`, 'system');
+                
+                // Wait and Recursively call function again
+                await new Promise(r => setTimeout(r, 2000));
+                return this.persistentRecovery(cartData, attempt + 1);
+            }
+
+            // 4. Success Detected
+            Logger.logNet(`SUCCESS: 200 OK`, 'success');
+            this.finalizeSuccess(data, cartData.items);
+
+        } catch (error) {
+            try {
+                const errorData = JSON.parse(error.message);
+                if (errorData.code === 'AML_FAILED') {
+                    this.abortRecovery("Compliance Violation. Cannot retry.");
+                } else {
+                    this.chat(`Unknown error during retry: ${error.message}`, 'system');
+                }
+            } catch (e) {
+                this.abortRecovery("Network Malfunction.");
+            }
+        }
+    }
+
+    finalizeSuccess(data, items) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        this.chat(`✅ <b>Transaction Settled!</b> ID: ${data.id}`, 'agent');
+        
+        Logger.pingMemory(`FINAL_STATE: TRANSACTION_COMMITTED_ID=${data.id}`);
+        Logger.logOrderContents(items);
+        
+        app.resetCart();
+    }
+
+    abortRecovery(reason) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        this.chat(`🛑 <b>Operation Aborted:</b> ${reason}`, 'system');
+        Logger.logMemory("ABORTED: " + reason);
+        
+        // Reset Badges
+        document.getElementById('statusBadge').className = "badge badge-auto";
+        document.getElementById('statusBadge').innerText = "ONLINE";
+    }
+}
+
+// --- 4. App Logic ---
+class App {
+    constructor() {
+        this.cart = [];
+        this.ai = new AIOps();
+        this.init();
+    }
+
+    init() {
+        const grid = document.getElementById('productGrid');
+        FINTECH_CATALOG.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'product-card';
+            el.innerHTML = `
+                <div style="font-size:2rem; margin-bottom:10px;">${this.getIcon(p.type)}</div>
+                <div>
+                    <div style="font-weight:600;">${p.name}</div>
+                    <div class="product-meta">${p.type} • Risk: ${p.risk}</div>
+                </div>
+                <div class="product-price">₹${p.price}</div>
+            `;
+            el.onclick = () => this.addToCart(p);
+            grid.appendChild(el);
+        });
+
+        document.getElementById('checkoutBtn').onclick = () => this.checkout();
+        document.getElementById('optimizeBtn').onclick = () => this.ai.handleOptimization();
+        document.getElementById('cancelRetryBtn').onclick = () => this.ai.abortRecovery("User Cancelled");
+    }
+
+    getIcon(type) {
+        if(type==='Infrastructure') return '💳'; if(type==='Remittance') return '🌍';
+        if(type==='Compliance') return '⚖️'; if(type==='Issuing') return '💼';
+        if(type==='Wealth') return '📈'; if(type==='Identity') return '🆔';
+        if(type==='Security') return '🛡️'; if(type==='Lending') return '💸';
+        return '📦';
+    }
+
+    addToCart(p) {
+        this.cart.push(p);
+        this.updateCart();
+        this.ai.trackPurchase(p); 
+        if (p.risk === 'High') this.ai.chat(`Added ${p.name}. <br><span style="color:var(--danger)">⚠️ High Risk.</span>`);
+    }
+
+    removeFromCart(index) {
+        this.cart.splice(index, 1);
+        this.updateCart();
+    }
+
+    sortCartByPrice() {
+        this.cart.sort((a, b) => b.price - a.price);
+        this.updateCart();
+        Logger.logMemory("CART_SORTED: HIGH_TO_LOW_VALUE");
+    }
+
+    initiateSwap(index) {
+        const itemToSell = this.cart[index];
+        this.ai.chat(`Selling **${itemToSell.name}**. Select replacement:`, 'agent');
+        
+        const swapDiv = document.createElement('div');
+        swapDiv.style.marginTop = "10px";
+        swapDiv.style.display = "flex";
+        swapDiv.style.flexWrap = "wrap";
+        swapDiv.style.gap = "5px";
+        
+        FINTECH_CATALOG.filter(p => p.id !== itemToSell.id).slice(0,3).forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'suggestion-btn'; 
+            btn.style.cssText = "background:#e0f2fe; color:#0369a1; border:none; padding:4px 8px; border-radius:4px; font-size:0.8rem; cursor:pointer;";
+            btn.textContent = p.name;
+            btn.onclick = () => {
+                this.ai.handleSwap(itemToSell, p); 
+                this.cart.splice(index, 1);
+                this.cart.push(p);
+                this.updateCart();
+                swapDiv.remove();
+            };
+            swapDiv.appendChild(btn);
+        });
+        
+        this.ai.chatArea.appendChild(swapDiv);
+    }
+
+    updateCart() {
+        const container = document.getElementById('cartItems');
+        container.innerHTML = '';
+        let total = 0;
+        this.cart.forEach((item, idx) => {
+            total += item.price;
+            const el = document.createElement('div');
+            el.className = 'cart-item';
+            el.innerHTML = `
+                <div>
+                    <div style="font-weight:600">${item.name}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted)">${item.type}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button onclick="app.initiateSwap(${idx})" style="background:var(--warning); border:none; color:white; cursor:pointer; border-radius:3px; font-size:0.7rem; padding:2px 5px;">Swap</button>
+                    <button onclick="app.removeFromCart(${idx})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.2rem;">×</button>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+        document.getElementById('cartTotal').innerText = `₹${total}`;
+        document.getElementById('checkoutBtn').disabled = this.cart.length === 0;
+    }
+
+    resetCart() {
+        this.cart = [];
+        this.updateCart();
+        document.getElementById('loadingOverlay').style.display = 'none';
+        
+        // Reset Badge to ONLINE
+        document.getElementById('statusBadge').className = "badge badge-auto";
+        document.getElementById('statusBadge').innerText = "ONLINE";
+    }
+
+    async checkout() {
+        const overlay = document.getElementById('loadingOverlay');
+        const txt = document.getElementById('loadingText');
+        
+        // Lock UI
+        overlay.style.display = 'flex';
+        document.getElementById('checkoutBtn').disabled = true;
+        document.getElementById('statusBadge').className = "badge badge-processing";
+        document.getElementById('statusBadge').innerText = "PROCESSING...";
+        
+        const cartData = { items: this.cart, total: this.cart.reduce((a,b)=>a+b.price,0) };
+
+        // Run Compliance
+        txt.innerText = "Running AML/KYC Compliance...";
+        document.getElementById('progressBar').style.width = "10%";
+        await this.ai.runComplianceCheck(this.cart);
+
+        // Start Infinite Loop
+        txt.innerText = "Contacting Primary Gateway...";
+        document.getElementById('progressBar').style.width = "20%";
+        
+        await this.ai.persistentRecovery(cartData);
+    }
+}
+
+const app = new App();
+</script>
+</body>
+</html>
