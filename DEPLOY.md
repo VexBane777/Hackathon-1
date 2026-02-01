@@ -2,30 +2,41 @@
 
 Because this application uses **WebSockets** and a **Background Simulator**, the Backend cannot run on Vercel (which uses short-lived Serverless functions).
 
-We will deploy the **Frontend to Vercel** and the **Backend to Render** (Free Tier).
+We will deploy the **Backend to Render** (Web Service).
+For the Frontend, you can use **Vercel** (recommended for speed) OR **Render** (to keep everything in one place).
 
-## 1. Backend Deployment (Render.com)
-1. Push this code to GitHub (already done).
+## 1. Backend Deployment (Render.com) - REQUIRED
+*This must be done first to get the URL.*
+1. Push this code to GitHub.
 2. Go to [dashboard.render.com](https://dashboard.render.com) -> New -> **Web Service**.
-3. Connect your GitHub repo `VexBane777/Hackathon-1`.
+3. Connect your GitHub repo.
 4. Settings:
    - **Root Directory**: `backend`
-   - **Runtime**: Python 3 (We added `runtime.txt` to force Python 3.11)
+   - **Runtime**: Python 3 (we enforce 3.11 via runtime.txt)
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port 10000`
 5. Click **Deploy**.
 6. Copy your new backend URL (e.g., `https://hackathon-1-backend.onrender.com`).
 
-## 2. Frontend Deployment (Vercel)
+## 2. Frontend Deployment (Option A: Vercel - Recommended)
 1. Go to [vercel.com](https://vercel.com) -> Add New -> Project.
-2. Import `VexBane777/Hackathon-1`.
+2. Import your repo.
 3. Settings:
+   - **Root Directory**: `frontend`
    - **Framework Preset**: Vite
-   - **Root Directory**: `frontend` (Click Edit)
    - **Environment Variables**:
-     - Name: `VITE_WS_URL`
-     - Value: `wss://hackathon-1-backend.onrender.com/ws`  
-       *(Replace with your actual Render URL, changing 'https' to 'wss')*
+     - `VITE_WS_URL`: `wss://your-backend-url.onrender.com/ws`
+4. Click **Deploy**.
+
+## 3. Frontend Deployment (Option B: Render - All-in-One)
+1. Go to Render Dashboard -> New -> **Static Site**.
+2. Connect your repo.
+3. Settings:
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+   - **Environment Variables**:
+     - `VITE_WS_URL`: `wss://your-backend-url.onrender.com/ws`
 4. Click **Deploy**.
 
 ## Why not Vercel for Backend?
