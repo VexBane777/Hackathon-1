@@ -1,9 +1,0 @@
-streamlit
-pandas
-plotly
-groq
-langgraph
-faker
-chromadb
-python-dotenv
-pydantic
