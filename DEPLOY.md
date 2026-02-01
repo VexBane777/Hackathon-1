@@ -12,7 +12,9 @@ For the Frontend, you can use **Vercel** (recommended for speed) OR **Render** (
 3. Connect your GitHub repo.
 4. Settings:
    - **Root Directory**: `backend`
-   - **Runtime**: Python 3 (we enforce 3.11 via runtime.txt)
+   - **Runtime**: Python 3
+   - **Environment Variables** (Add these):
+     - `PYTHON_VERSION`: `3.11.9` (CRITICAL: Required for ML libraries)
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port 10000`
 5. Click **Deploy**.
