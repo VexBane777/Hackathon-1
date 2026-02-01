@@ -10,7 +10,7 @@ We will deploy the **Frontend to Vercel** and the **Backend to Render** (Free Ti
 3. Connect your GitHub repo `VexBane777/Hackathon-1`.
 4. Settings:
    - **Root Directory**: `backend`
-   - **Runtime**: Python 3
+   - **Runtime**: Python 3 (We added `runtime.txt` to force Python 3.11)
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port 10000`
 5. Click **Deploy**.
