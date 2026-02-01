@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Transaction, Decision, SystemMetrics, CouncilDebate, WebSocketMessage, LogEntry, AgentSource } from '../types';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+// Hardcoded fallback for production to ensure it works even if Env Var fails
+const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const WS_URL = IS_LOCAL
+    ? 'ws://localhost:8000/ws'
+    : 'wss://hackathon-3zry.onrender.com/ws';
 const RECONNECT_DELAY = 3000;
 
 export interface UseWebSocketReturn {
